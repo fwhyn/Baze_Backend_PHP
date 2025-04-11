@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
 RUN a2enmod rewrite
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /var/www
 
 # Copy Laravel app
 COPY . .
@@ -18,11 +18,14 @@ COPY . .
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# Set the proper web root for Apache
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/public|g' /etc/apache2/sites-available/000-default.conf
+
 # Install dependencies
 RUN composer install --optimize-autoloader --no-dev
 
-# Set correct permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions (important for Laravel)
+RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 # Expose Apache port
 EXPOSE 80
